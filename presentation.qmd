@@ -1,0 +1,86 @@
+---
+title: "Regression demonstration app"
+author: "AM"
+format: 
+  revealjs:
+    theme: default
+    fontsize: 0.8em
+editor: visual
+---
+
+## Overview {.smaller}
+
+```{r setup, echo=FALSE, warnings = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This app (<https://porcudighel.shinyapps.io/DDP_Final_App/>) aims at showing how inclusion and exclusion of regressors impacts the final prediction.
+
+The dataset *airquality* has been used to fit *Ozone* against *Solar.R*, *Temp* and *Wind*, which the user can chose via checkboxs.
+
+The user ticks one or more of the checkboxes and presses the button **Submit**.
+
+![](App.png){fig-align="center" width="337"}
+
+The resulting formula, plot, R squared and table of coefficients are displayed.
+
+## How it works (processing) {.smaller}
+
+The input checkboxes are used to build up a string containing a formula (no selection leads to main panel with only titles by using of *req(isThruthy(...))* in the code).
+
+, the formula is:
+
+```{r, echo = FALSE}
+input_solR_ch <- TRUE
+input_temp_ch <- FALSE
+input_wind_ch <- TRUE
+```
+
+```{r}
+params <- NULL
+    if (input_solR_ch){params <- c(params,"Solar.R")}
+    if (input_temp_ch){params <- c(params,"Temp")}
+    if (input_wind_ch){params <- c(params,"Wind")}
+    form_mod <- paste0("Ozone ~ ",paste(params, collapse = " + "))
+```
+
+The linear regression is executed and predicted data calculated:
+
+```{r}
+model <- lm(form_mod, data = airquality)
+pred_data <- predict(model, airquality)
+```
+
+## How it works (output) {.smaller}
+
+For instance, if "Solar radiation" and "Wind" are ticked the app will display:
+
+```{r}
+## Built model
+form_mod
+# Resulting R squared
+round(summary(model)$r.squared,5)
+# Model's coefficients
+summary(model)$coefficients
+```
+
+## How it works (output) {.smaller}
+
+```{r}
+## Plot of original and predicted values
+with(airquality, plot(Solar.R, Ozone, col = "blue", lwd =2,
+                          xlab = "Solar radiation", ylab = "Ozone"))
+    with(airquality, points(Solar.R, pred_data, col = "red", lwd =2))
+    legend("topleft", c("Original", "Predicted"), pch = 16, 
+    col = c("blue", "red"), cex = 1.2)
+```
+
+**Possible further improvements**
+
+1.  Possibility to add interaction terms in the building up of the formula.
+
+2.  Choice to include or exclude the variables *Month* and *Day* (as regressors or as grouping variables).
+
+3.  Output plot with choice of variable on the x axis.
+
+4.  Use of a 3D plot when needed.
